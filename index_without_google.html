@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6c5ce7">
+  <title>LearnCue | Little Readers</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#4F46E5">
+
+  <style>
+    .login-screen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#f3efff,#fff4e9);font-family:inherit}
+    .login-card{width:min(100%,420px);background:#fff;border-radius:24px;padding:32px;box-shadow:0 18px 55px #5145a522;text-align:center}
+    .login-logo{font-size:48px;margin-bottom:8px}.login-card h1{margin:8px 0;color:#30245f}.login-card p{color:#6b6680;line-height:1.5}
+    .login-card label{display:block;text-align:left;margin:18px 0 7px;font-weight:700;color:#443b68}
+    .login-card input{box-sizing:border-box;width:100%;padding:13px 14px;border:2px solid #e5e0f4;border-radius:12px;font:inherit;outline:none}
+    .login-card input:focus{border-color:#6c5ce7}.login-card button{width:100%;border:0;border-radius:12px;padding:14px;margin-top:18px;background:#6c5ce7;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+    .login-error{color:#c0392b!important;min-height:1.2em;font-size:14px}.hidden-by-login{display:none!important}
+    .logout-button{border:0;border-radius:10px;padding:8px 12px;margin-left:10px;background:#eee9ff;color:#5142a6;font-weight:700;cursor:pointer}
+  </style>
+
+</head>
+<body>
+  <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
+    <form class="login-card" id="loginForm">
+      <div class="login-logo">📚</div>
+      <p class="eyebrow">WELCOME TO LEARNCUE</p>
+      <h1 id="loginTitle">Little Reader Login</h1>
+      <p>Sign in to start your reading adventure.</p>
+      <label for="readerName">Full name</label>
+      <input id="readerName" name="readerName" type="text" maxlength="80" placeholder="Enter your full name" autocomplete="name" required>
+      <label for="readerPassword">Password</label>
+      <input id="readerPassword" name="readerPassword" type="password" minlength="6" placeholder="Enter your password" autocomplete="current-password" required>
+      <p class="login-error" id="loginError" role="alert"></p>
+      <button type="submit">Login →</button>
+      <p style="font-size:12px">Your demo profile is saved on this device.</p>
+    </form>
+  </section>
+  <header class="topbar hidden-by-login" id="appHeader">
+    <a class="brand" href="#" aria-label="LearnCue home"><span class="brand-icon">📚</span><span>LearnCue</span></a>
+    <div class="streak"><span>⭐</span> <strong id="starCount">0</strong> stars <button class="logout-button" id="logoutButton" type="button">Log out</button></div>
+  </header>
+  <main class="container hidden-by-login" id="appMain">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">HELLO, LITTLE READER!</p>
+        <h1>Let’s learn to<br><span>read together.</span></h1>
+        <p class="hero-description">Letters, sounds, and little stories make big adventures.</p>
+        <button class="primary-button" id="startButton">Start learning <span>→</span></button>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="sun">☀️</div><div class="book-stack">📚</div><div class="bear">🐻</div>
+        <div class="floating-letter letter-a">A</div><div class="floating-letter letter-b">B</div>
+      </div>
+    </section>
+    <section class="section-heading">
+      <div><p class="eyebrow">YOUR ADVENTURE</p><h2>Choose an activity</h2></div>
+      <p class="small-note">Learn a little every day 🌱</p>
+    </section>
+    <section class="activity-grid">
+      <button class="activity-card card-peach" data-view="letters"><span class="activity-emoji">🔤</span><span class="activity-title">Letter Land</span><span class="activity-description">Learn letters and sounds</span><span class="card-arrow">→</span></button>
+      <button class="activity-card card-blue" data-view="words"><span class="activity-emoji">📖</span><span class="activity-title">Little Words</span><span class="activity-description">Practice simple words</span><span class="card-arrow">→</span></button>
+      <button class="activity-card card-purple" data-view="match"><span class="activity-emoji">🧩</span><span class="activity-title">Picture Match</span><span class="activity-description">Match words and pictures</span><span class="card-arrow">→</span></button>
+      <button class="activity-card card-pink" data-view="listen"><span class="activity-emoji">🔊</span><span class="activity-title">Listen & Say</span><span class="activity-description">Hear words read aloud</span><span class="card-arrow">→</span></button>
+      <button class="activity-card card-green" data-view="comprehension"><span class="activity-emoji">🌳</span><span class="activity-title">Story Time</span><span class="activity-description">Read and answer questions</span><span class="card-arrow">→</span></button>
+      <button class="activity-card card-yellow" data-view="progress"><span class="activity-emoji">🏆</span><span class="activity-title">My Progress</span><span class="activity-description">See your stars and activities</span><span class="card-arrow">→</span></button>
+    </section>
+    <section id="activityPanel" class="panel hidden" aria-live="polite">
+      <div class="panel-heading"><div><p class="eyebrow" id="panelEyebrow">LET'S PRACTICE</p><h2 id="panelTitle">Activity</h2></div><button id="closePanel" class="close-button" aria-label="Close activity">✕</button></div>
+      <div id="panelContent"></div>
+    </section>
+    <footer><span>🌈</span> Every reader grows one page at a time. <span>🌈</span></footer>
+  </main>
+
+  <script>
+    (() => {
+      const screen = document.getElementById('loginScreen');
+      const form = document.getElementById('loginForm');
+      const nameInput = document.getElementById('readerName');
+      const passwordInput = document.getElementById('readerPassword');
+      const error = document.getElementById('loginError');
+      const header = document.getElementById('appHeader');
+      const main = document.getElementById('appMain');
+      const logout = document.getElementById('logoutButton');
+      const profileKey = 'learncue_demo_profile';
+
+      function showApp(profile) {
+        screen.classList.add('hidden-by-login');
+        header.classList.remove('hidden-by-login');
+        main.classList.remove('hidden-by-login');
+        const greeting = document.querySelector('.hero-copy .eyebrow');
+        if (greeting) greeting.textContent = 'HELLO, ' + profile.name.toUpperCase() + '!';
+        try {
+          const savedStars = localStorage.getItem('learncue_stars_' + profile.name.toLowerCase());
+          const starCount = document.getElementById('starCount');
+          if (starCount && savedStars !== null) starCount.textContent = savedStars;
+        } catch (_) {}
+      }
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const name = nameInput.value.trim();
+        const password = passwordInput.value;
+        if (!name) { error.textContent = 'Please enter your full name.'; return; }
+        if (password.length < 6) { error.textContent = 'Password must be at least 6 characters.'; return; }
+        try {
+          const accountKey = 'learncue_demo_account_' + name.toLowerCase();
+          const existingAccount = JSON.parse(localStorage.getItem(accountKey) || 'null');
+          if (existingAccount && existingAccount.password !== password) {
+            error.textContent = 'Incorrect password for this name on this device.';
+            return;
+          }
+          if (!existingAccount) localStorage.setItem(accountKey, JSON.stringify({ name, password }));
+          const profile = { name, provider: 'local' };
+          localStorage.setItem(profileKey, JSON.stringify(profile));
+          showApp(profile);
+        } catch (_) {
+          error.textContent = 'Your browser storage is unavailable. Please enable local storage.';
+        }
+      });
+
+      logout.addEventListener('click', () => {
+        screen.classList.remove('hidden-by-login');
+        header.classList.add('hidden-by-login');
+        main.classList.add('hidden-by-login');
+        nameInput.value = '';
+        passwordInput.value = '';
+        error.textContent = '';
+        nameInput.focus();
+      });
+
+      try {
+        const profile = JSON.parse(localStorage.getItem(profileKey) || 'null');
+        if (profile && profile.name) showApp(profile);
+        else nameInput.focus();
+      } catch (_) { nameInput.focus(); }
+    })();
+  </script>
+
+  <script src="app.js"></script>
+  <script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", async () => {
+        try {
+            await navigator.serviceWorker.register("./sw.js");
+            console.log("Service worker registered!");
+        } catch (error) {
+            console.error("Service worker error:", error);
+        }
+    });
+}
+</script>
+</body>
+</html>
